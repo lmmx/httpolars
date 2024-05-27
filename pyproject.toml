@@ -13,5 +13,5 @@ classifiers = [
 
 [tool.pdm.dev-dependencies]
 development = [
-    "maturin>=1.5.1",
+    "maturin[patchelf]>=1.5.1",
 ]
