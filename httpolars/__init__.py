@@ -17,12 +17,7 @@ if parse_version(pl.__version__) < parse_version("0.20.16"):
 else:
     lib = Path(__file__).parent
 
-__all__ = ["pig_latinnify", "noop", "abs_i64", "sum_i64", "add_suffix"]
-
-
-def pig_latinnify(expr: IntoExpr) -> pl.Expr:
-    expr = parse_into_expr(expr)
-    return plug(args=[expr], symbol="pig_latinnify", is_elementwise=True)
+__all__ = ["noop", "abs_i64", "sum_i64", "add_suffix"]
 
 
 def noop(expr: IntoExpr) -> pl.Expr:
