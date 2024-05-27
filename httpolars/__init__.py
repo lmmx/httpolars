@@ -17,22 +17,41 @@ if parse_version(pl.__version__) < parse_version("0.20.16"):
 else:
     lib = Path(__file__).parent
 
+__all__ = ["pig_latinnify", "noop", "abs_i64", "sum_i64", "add_suffix"]
+
 
 def pig_latinnify(expr: IntoExpr) -> pl.Expr:
     expr = parse_into_expr(expr)
-    return register_plugin(
-        args=[expr],
-        symbol="pig_latinnify",
-        is_elementwise=True,
-        lib=lib,
-    )
+    return plug(args=[expr], symbol="pig_latinnify", is_elementwise=True)
 
 
 def noop(expr: IntoExpr) -> pl.Expr:
     expr = parse_into_expr(expr)
-
     return expr.register_plugin(
         lib=lib,
         symbol="noop",
         is_elementwise=True,
+    )
+
+
+def abs_i64(expr: IntoExpr) -> pl.Expr:
+    expr = parse_into_expr(expr)
+    return expr.register_plugin(
+        lib=lib,
+        symbol="abs_i64",
+        is_elementwise=True,
+    )
+
+
+def sum_i64(expr: IntoExpr, other: IntoExpr) -> pl.Expr:
+    expr = parse_into_expr(expr)
+    return expr.register_plugin(
+        lib=lib, symbol="sum_i64", is_elementwise=True, args=[other]
+    )
+
+
+def add_suffix(expr: IntoExpr, *, suffix: str) -> pl.Expr:
+    expr = parse_into_expr(expr)
+    return expr.register_plugin(
+        lib=lib, symbol="add_suffix", is_elementwise=True, kwargs={"suffix": suffix}
     )
