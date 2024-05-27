@@ -17,17 +17,6 @@ fn pig_latinnify(inputs: &[Series]) -> PolarsResult<Series> {
 }
 
 
-fn same_output_type(input_fields: &[Field]) -> PolarsResult<Field> {
-    let field = &input_fields[0];
-    Ok(field.clone())
-}
-
-#[polars_expr(output_type_func=same_output_type)]
-fn noop(inputs: &[Series]) -> PolarsResult<Series> {
-    let s = &inputs[0];
-    Ok(s.clone())
-}
-
 #[polars_expr(output_type=Int64)]
 fn abs_i64(inputs: &[Series]) -> PolarsResult<Series> {
     let s = &inputs[0];
