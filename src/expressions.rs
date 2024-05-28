@@ -68,8 +68,20 @@ struct ApiCallKwargs {
 fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
     let s = &inputs[0];
     let ca = s.str()?;
-    let out = ca.apply_to_buffer(|value, output| {
-        write!(output, "{}{}", value, kwargs.endpoint).unwrap();
-    });
+
+    fn write_endpoint<T: std::fmt::Display>(ca: ChunkedArray<T>, endpoint: &str) -> Utf8Chunked {
+        ca.apply_to_buffer(|value, output| {
+            write!(output, "{}?param={}", value, endpoint).unwrap();
+        })
+    }
+
+    let out = match s.dtype() {
+        DataType::Utf8 => write_endpoint(s.utf8()?, &kwargs.endpoint),
+        DataType::Int32 => write_endpoint(s.i32()?, &kwargs.endpoint),
+        DataType::Int64 => write_endpoint(s.i64()?, &kwargs.endpoint),
+        dtype => polars_bail!(InvalidOperation::format!("Data type {dtype} not \
+             supported for api_call, expected Utf8, Int32, Int64.")),
+    };
+
     Ok(out.into_series())
 }

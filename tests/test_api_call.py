@@ -5,7 +5,7 @@ import httpolars as httpl
 
 
 def test_api_call_noop():
-    df = pl.DataFrame({"number": [1, 2, 3]})
+    df = pl.DataFrame({"letter": [1, 2, 3]})
     result = df.with_columns(
         api_result=httpl.api_call("number", endpoint="http://localhost:80/noop")
     )
