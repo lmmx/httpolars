@@ -68,21 +68,23 @@ struct ApiCallKwargs {
 fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
     let s = &inputs[0];
 
-    match s.dtype() {
+    let out = match s.dtype() {
         // DataType::Utf8 => write_endpoint(s.str().unwrap(), &kwargs.endpoint),
         DataType::Int32 => {
             let ca = s.i32()?;
-            Ok(ca.apply_to_buffer(|value, output| {
-                write!(output, "{}?param={}", value.unwrap(), &kwargs.endpoint).unwrap();
-            }).into_series())
+            StringChunked::from_iter(
+                ca.into_iter().map(|opt_v| opt_v.map(|v| format!("{}?param={}", v, &kwargs.endpoint))),
+            ).into_series()
         },
         DataType::Int64 => {
             let ca = s.i64()?;
-            Ok(ca.apply_to_buffer(|value, output| {
-                write!(output, "{}?param={}", value.unwrap(), &kwargs.endpoint).unwrap();
-            }).into_series())
+            StringChunked::from_iter(
+                ca.into_iter().map(|opt_v| opt_v.map(|v| format!("{}?param={}", v, &kwargs.endpoint))),
+            ).into_series()
         },
         dtype => polars_bail!(InvalidOperation:format!("Data type {dtype} not \
              supported for api_call, expected Utf8, Int32, Int64.")),
     };
+
+    Ok(out.into_series())
 }
