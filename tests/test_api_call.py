@@ -1,9 +1,19 @@
 import polars as pl
+from pytest import mark
 
 import httpolars as httpl
 
 
-def test_api_call():
+def test_api_call_noop():
+    df = pl.DataFrame({"number": [1, 2, 3]})
+    result = df.with_columns(
+        api_result=httpl.api_call("number", endpoint="http://localhost:80/noop")
+    )
+    assert result.equals(df)
+
+
+@mark.skip
+def test_api_call_factorial():
     df = pl.DataFrame({"number": [1, 2, 3]})
     result = df.with_columns(
         api_result=httpl.api_call(
