@@ -1,4 +1,5 @@
 import polars as pl
+from inline_snapshot import snapshot
 from pytest import mark
 
 import httpolars as httpl
@@ -7,16 +8,22 @@ import httpolars as httpl
 def test_api_call_noop():
     df = pl.DataFrame({"number": [1, 2, 3]})
     result = df.with_columns(
-        api_result=httpl.api_call("number", endpoint="http://localhost:80/noop")
+        response=httpl.api_call("number", endpoint="http://localhost:80/noop")
     )
-    assert result.to_dicts() == df.to_dicts()
+    assert result.to_dicts() == snapshot(
+        [
+            {"number": 1, "response": "http://localhost:80/noop?param=1"},
+            {"number": 2, "response": "http://localhost:80/noop?param=2"},
+            {"number": 3, "response": "http://localhost:80/noop?param=3"},
+        ]
+    )
 
 
 @mark.skip
 def test_api_call_factorial():
     df = pl.DataFrame({"number": [1, 2, 3]})
     result = df.with_columns(
-        api_result=httpl.api_call(
+        response=httpl.api_call(
             "number", endpoint="http://localhost:80/permutations"
         ).alias("factorial")
     )
