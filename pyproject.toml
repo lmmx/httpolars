@@ -15,3 +15,7 @@ classifiers = [
 development = [
     "maturin[patchelf]>=1.5.1",
 ]
+test = [
+    "pytest>=8.2.1",
+    "inline-snapshot>=0.10.2",
+]
