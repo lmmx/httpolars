@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import polars as pl
 
-from httpolars.utils import parse_into_expr, parse_version, register_plugin
+from .utils import parse_into_expr, parse_version, register_plugin
 
 if TYPE_CHECKING:
     from polars.type_aliases import IntoExpr
