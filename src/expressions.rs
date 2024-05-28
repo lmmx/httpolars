@@ -69,7 +69,7 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
     let s = &inputs[0];
     let ca = s.str()?;
     let out = ca.apply_to_buffer(|value, output| {
-        write!(output, "{}{}", value, kwargs.suffix).unwrap();
+        write!(output, "{}{}", value, kwargs.endpoint).unwrap();
     });
     Ok(out.into_series())
 }
