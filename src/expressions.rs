@@ -70,7 +70,12 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
     let name = s.name();
 
     let out = match s.dtype() {
-        // DataType::Utf8 => write_endpoint(s.str().unwrap(), &kwargs.endpoint),
+        DataType::String => {
+            let ca = s.str()?;
+            StringChunked::from_iter(
+                ca.into_iter().map(|opt_v| opt_v.map(|v| format!("{}?{}={}", &kwargs.endpoint, name, v))),
+            ).into_series()
+        },
         DataType::Int32 => {
             let ca = s.i32()?;
             StringChunked::from_iter(
@@ -84,7 +89,7 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
             ).into_series()
         },
         dtype => polars_bail!(InvalidOperation:format!("Data type {dtype} not \
-             supported for api_call, expected Utf8, Int32, Int64.")),
+             supported for api_call, expected String, Int32, Int64.")),
     };
 
     Ok(out.into_series())
