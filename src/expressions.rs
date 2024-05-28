@@ -73,13 +73,13 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
         DataType::Int32 => {
             let ca = s.i32()?;
             StringChunked::from_iter(
-                ca.into_iter().map(|opt_v| opt_v.map(|v| format!("{}?param={}", v, &kwargs.endpoint))),
+                ca.into_iter().map(|opt_v| opt_v.map(|v| format!("{}?param={}", &kwargs.endpoint, v))),
             ).into_series()
         },
         DataType::Int64 => {
             let ca = s.i64()?;
             StringChunked::from_iter(
-                ca.into_iter().map(|opt_v| opt_v.map(|v| format!("{}?param={}", v, &kwargs.endpoint))),
+                ca.into_iter().map(|opt_v| opt_v.map(|v| format!("{}?param={}", &kwargs.endpoint, v))),
             ).into_series()
         },
         dtype => polars_bail!(InvalidOperation:format!("Data type {dtype} not \
