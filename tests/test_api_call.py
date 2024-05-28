@@ -1,10 +1,11 @@
 import polars as pl
-from httpolars import api_call
+
+import httpolars as httpl
 
 
 def test_api_call():
     df = pl.DataFrame({"number": 123})
-    result = df.with_columns(api_result=api_call("number").alias("is_even"))
+    result = df.with_columns(api_result=httpl.api_call("number").alias("is_even"))
     expected_df = pl.DataFrame(
         {
             "number": 123,

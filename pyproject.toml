@@ -17,4 +17,5 @@ development = [
 ]
 test = [
     "pytest>=8.2.1",
+    "inline-snapshot>=0.10.2",
 ]

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -20,24 +21,23 @@ else:
 __all__ = ["abs_i64", "sum_i64", "add_suffix"]
 
 
+def plug(expr, **kwargs) -> pl.Expr:
+    """Wrap the `register_expr_plugin` helper to always pass `lib` (invariant)."""
+    func_name = inspect.stack()[1].function
+    return parse_into_expr(expr).register_plugin(symbol=func_name, lib=lib, **kwargs)
+
+
 def abs_i64(expr: IntoExpr) -> pl.Expr:
-    expr = parse_into_expr(expr)
-    return expr.register_plugin(
-        lib=lib,
-        symbol="abs_i64",
-        is_elementwise=True,
-    )
+    return plug(expr, is_elementwise=True)
 
 
 def sum_i64(expr: IntoExpr, other: IntoExpr) -> pl.Expr:
-    expr = parse_into_expr(expr)
-    return expr.register_plugin(
-        lib=lib, symbol="sum_i64", is_elementwise=True, args=[other]
-    )
+    return plug(expr, is_elementwise=True, args=[other])
 
 
 def add_suffix(expr: IntoExpr, *, suffix: str) -> pl.Expr:
-    expr = parse_into_expr(expr)
-    return expr.register_plugin(
-        lib=lib, symbol="add_suffix", is_elementwise=True, kwargs={"suffix": suffix}
-    )
+    return plug(expr, is_elementwise=True, kwargs={"suffix": suffix})
+
+
+def api_call(expr: IntoExpr, *, endpoint: str) -> pl.Expr:
+    return plug(expr, is_elementwise=True, kwargs={"endpoint": endpoint})

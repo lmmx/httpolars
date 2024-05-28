@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Sequence, Any
+from typing import TYPE_CHECKING, Any, Sequence
 
 import polars as pl
 
 if TYPE_CHECKING:
-    from polars.type_aliases import IntoExpr, PolarsDataType
     from pathlib import Path
+
+    from polars.type_aliases import IntoExpr, PolarsDataType
 
 
 def parse_into_expr(
@@ -78,10 +79,10 @@ def register_plugin(
         is_elementwise=is_elementwise,
     )
 
+
 def parse_version(version: Sequence[str | int]) -> tuple[int, ...]:
     # Simple version parser; split into a tuple of ints for comparison.
     # vendored from Polars
     if isinstance(version, str):
         version = version.split(".")
     return tuple(int(re.sub(r"\D", "", str(v))) for v in version)
-
