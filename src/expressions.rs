@@ -92,7 +92,8 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
             StringChunked::from_iter(
                 ca.into_iter().map(|opt_v| opt_v.map(|v| {
                     let mut params = HashMap::new();
-                    params.insert(name, v);
+                    let v_str = v.to_string();
+                    params.insert(name, v_str.as_str());
                     match make_request(endpoint, &params) {
                     	Ok(response) => response,
                         Err(e) => format!("Error: {}", e),
@@ -106,7 +107,8 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
             StringChunked::from_iter(
                 ca.into_iter().map(|opt_v| opt_v.map(|v| {
                     let mut params = HashMap::new();
-                    params.insert(name, v);
+                    let v_str = v.to_string();
+                    params.insert(name, v_str.as_str());
                     match make_request(endpoint, &params) {
                     	Ok(response) => response,
                         Err(e) => format!("Error: {}", e),

@@ -28,8 +28,8 @@ def test_api_call_factorial():
     )
     assert result.to_dicts() == snapshot(
         [
-            {"number": 1, "permutations": "http://localhost:8000/factorial?number=1"},
-            {"number": 2, "permutations": "http://localhost:8000/factorial?number=2"},
-            {"number": 3, "permutations": "http://localhost:8000/factorial?number=3"},
+            {"number": 1, "permutations": '{"factorial":1}'},
+            {"number": 2, "permutations": '{"factorial":2}'},
+            {"number": 3, "permutations": '{"factorial":6}'},
         ]
     )
