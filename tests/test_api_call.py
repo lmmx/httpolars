@@ -12,9 +12,9 @@ def test_api_call_noop():
     )
     assert result.to_dicts() == snapshot(
         [
-            {"value": "x", "response": "http://localhost:8000/noop?value=x"},
-            {"value": "y", "response": "http://localhost:8000/noop?value=y"},
-            {"value": "z", "response": "http://localhost:8000/noop?value=z"},
+            {"value": "x", "response": '{"value":"x"}'},
+            {"value": "y", "response": '{"value":"y"}'},
+            {"value": "z", "response": '{"value":"z"}'},
         ]
     )
 

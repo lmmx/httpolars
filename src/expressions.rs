@@ -77,7 +77,6 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
             let ca = s.str()?;
             StringChunked::from_iter(
                 ca.into_iter().map(|opt_v| opt_v.map(|v| {
-                    // format!("{}?{}={}", &kwargs.endpoint, name, v)
                     let mut params = HashMap::new();
                     params.insert(name, v);
                     match make_request(endpoint, &params) {
@@ -91,13 +90,29 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
         DataType::Int32 => {
             let ca = s.i32()?;
             StringChunked::from_iter(
-                ca.into_iter().map(|opt_v| opt_v.map(|v| format!("{}?{}={}", &kwargs.endpoint, name, v))),
+                ca.into_iter().map(|opt_v| opt_v.map(|v| {
+                    let mut params = HashMap::new();
+                    params.insert(name, v);
+                    match make_request(endpoint, &params) {
+                    	Ok(response) => response,
+                        Err(e) => format!("Error: {}", e),
+                    }
+                })
+                ),
             ).into_series()
         },
         DataType::Int64 => {
             let ca = s.i64()?;
             StringChunked::from_iter(
-                ca.into_iter().map(|opt_v| opt_v.map(|v| format!("{}?{}={}", &kwargs.endpoint, name, v))),
+                ca.into_iter().map(|opt_v| opt_v.map(|v| {
+                    let mut params = HashMap::new();
+                    params.insert(name, v);
+                    match make_request(endpoint, &params) {
+                    	Ok(response) => response,
+                        Err(e) => format!("Error: {}", e),
+                    }
+                })
+                ),
             ).into_series()
         },
         dtype => polars_bail!(InvalidOperation:format!("Data type {dtype} not \
