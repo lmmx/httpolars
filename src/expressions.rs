@@ -4,6 +4,8 @@ use polars::prelude::arity::binary_elementwise;
 use pyo3_polars::derive::polars_expr;
 use std::fmt::Write;
 use serde::Deserialize;
+use std::collections::HashMap;
+use crate::api::make_request;
 
 #[polars_expr(output_type=String)]
 fn pig_latinnify(inputs: &[Series]) -> PolarsResult<Series> {
@@ -68,24 +70,51 @@ struct ApiCallKwargs {
 fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
     let s = &inputs[0];
     let name = s.name();
+    let endpoint = &kwargs.endpoint;
 
     let out = match s.dtype() {
         DataType::String => {
             let ca = s.str()?;
             StringChunked::from_iter(
-                ca.into_iter().map(|opt_v| opt_v.map(|v| format!("{}?{}={}", &kwargs.endpoint, name, v))),
+                ca.into_iter().map(|opt_v| opt_v.map(|v| {
+                    let mut params = HashMap::new();
+                    params.insert(name, v);
+                    match make_request(endpoint, &params) {
+                    	Ok(response) => response,
+                        Err(e) => format!("Error: {}", e),
+                    }
+                })
+                ),
             ).into_series()
         },
         DataType::Int32 => {
             let ca = s.i32()?;
             StringChunked::from_iter(
-                ca.into_iter().map(|opt_v| opt_v.map(|v| format!("{}?{}={}", &kwargs.endpoint, name, v))),
+                ca.into_iter().map(|opt_v| opt_v.map(|v| {
+                    let mut params = HashMap::new();
+                    let v_str = v.to_string();
+                    params.insert(name, v_str.as_str());
+                    match make_request(endpoint, &params) {
+                    	Ok(response) => response,
+                        Err(e) => format!("Error: {}", e),
+                    }
+                })
+                ),
             ).into_series()
         },
         DataType::Int64 => {
             let ca = s.i64()?;
             StringChunked::from_iter(
-                ca.into_iter().map(|opt_v| opt_v.map(|v| format!("{}?{}={}", &kwargs.endpoint, name, v))),
+                ca.into_iter().map(|opt_v| opt_v.map(|v| {
+                    let mut params = HashMap::new();
+                    let v_str = v.to_string();
+                    params.insert(name, v_str.as_str());
+                    match make_request(endpoint, &params) {
+                    	Ok(response) => response,
+                        Err(e) => format!("Error: {}", e),
+                    }
+                })
+                ),
             ).into_series()
         },
         dtype => polars_bail!(InvalidOperation:format!("Data type {dtype} not \
