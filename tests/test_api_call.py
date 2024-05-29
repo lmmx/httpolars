@@ -5,31 +5,38 @@ from pytest import mark
 import httpolars as httpl
 
 
-def test_api_call_noop():
+def jsonpath(response: str | pl.Expr, path: str):
+    """Accept either the response `Expr` or reference by its column name."""
+    response = pl.col(response) if isinstance(response, str) else response
+    return response.str.json_path_match(f"$.{path}")
+
+
+@mark.parametrize("url", ["http://localhost:8000/noop"])
+def test_api_call_noop(url):
+    """The response gives back the input, and the column is overwritten unchanged."""
     df = pl.DataFrame({"value": ["x", "y", "z"]})
-    result = df.with_columns(
-        response=httpl.api_call("value", endpoint="http://localhost:8000/noop")
-    )
+    response = httpl.api_call("value", endpoint=url)
+    value = jsonpath(response, "value")
+    result = df.with_columns(value)
     assert result.to_dicts() == snapshot(
-        [
-            {"value": "x", "response": '{"value":"x"}'},
-            {"value": "y", "response": '{"value":"y"}'},
-            {"value": "z", "response": '{"value":"z"}'},
-        ]
+        [{"value": "x"}, {"value": "y"}, {"value": "z"}]
     )
+    print(result)
 
 
-def test_api_call_factorial():
+@mark.parametrize("url", ["http://localhost:8000/factorial"])
+def test_api_call_factorial(url):
+    """Response includes a `number` key and a `factorial` value key."""
     df = pl.DataFrame({"number": [1, 2, 3]})
-    result = df.with_columns(
-        permutations=httpl.api_call(
-            "number", endpoint="http://localhost:8000/factorial"
-        )
-    )
+    response = httpl.api_call("number", endpoint=url).alias("response")
+    in_ = jsonpath("response", "number").str.to_integer().alias("supplied")
+    out = jsonpath("response", "factorial").str.to_integer().alias("permutations")
+    result = df.with_columns(response).with_columns([in_, out]).drop("response")
     assert result.to_dicts() == snapshot(
         [
-            {"number": 1, "permutations": '{"factorial":1}'},
-            {"number": 2, "permutations": '{"factorial":2}'},
-            {"number": 3, "permutations": '{"factorial":6}'},
+            {"number": 1, "supplied": 1, "permutations": 1},
+            {"number": 2, "supplied": 2, "permutations": 2},
+            {"number": 3, "supplied": 3, "permutations": 6},
         ]
     )
+    print(result)
