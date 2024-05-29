@@ -8,13 +8,13 @@ import httpolars as httpl
 def test_api_call_noop():
     df = pl.DataFrame({"value": ["x", "y", "z"]})
     result = df.with_columns(
-        response=httpl.api_call("value", endpoint="http://localhost:80/noop")
+        response=httpl.api_call("value", endpoint="http://localhost:8000/noop")
     )
     assert result.to_dicts() == snapshot(
         [
-            {"value": "x", "response": "http://localhost:80/noop?value=x"},
-            {"value": "y", "response": "http://localhost:80/noop?value=y"},
-            {"value": "z", "response": "http://localhost:80/noop?value=z"},
+            {"value": "x", "response": "http://localhost:8000/noop?value=x"},
+            {"value": "y", "response": "http://localhost:8000/noop?value=y"},
+            {"value": "z", "response": "http://localhost:8000/noop?value=z"},
         ]
     )
 
@@ -22,12 +22,14 @@ def test_api_call_noop():
 def test_api_call_factorial():
     df = pl.DataFrame({"number": [1, 2, 3]})
     result = df.with_columns(
-        permutations=httpl.api_call("number", endpoint="http://localhost:80/factorial")
+        permutations=httpl.api_call(
+            "number", endpoint="http://localhost:8000/factorial"
+        )
     )
     assert result.to_dicts() == snapshot(
         [
-            {"number": 1, "permutations": "http://localhost:80/factorial?number=1"},
-            {"number": 2, "permutations": "http://localhost:80/factorial?number=2"},
-            {"number": 3, "permutations": "http://localhost:80/factorial?number=3"},
+            {"number": 1, "permutations": "http://localhost:8000/factorial?number=1"},
+            {"number": 2, "permutations": "http://localhost:8000/factorial?number=2"},
+            {"number": 3, "permutations": "http://localhost:8000/factorial?number=3"},
         ]
     )
