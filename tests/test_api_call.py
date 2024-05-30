@@ -24,17 +24,17 @@ def test_api_call_noop(url):
     print(result)
 
 
-@mark.parametrize("url", ["http://localhost:8000/factorial"])
-def test_api_call_factorial_keep_response(url):
-    """Response includes a `number` key and a `factorial` value key."""
-    df = pl.DataFrame({"number": [1, 2, 3]})
-    response = httpl.api_call("number", endpoint=url).alias("response")
+@mark.parametrize("url", ["http://localhost:8000/permafailure"])
+def test_api_call_permafailure_keep_response(url):
+    """Response is never obtained, always fails (429)."""
+    df = pl.DataFrame({"futile": [0, 10, 20]})
+    response = httpl.api_call("futile", endpoint=url).alias("response")
     result = df.with_columns(response)
     assert result.to_dicts() == snapshot(
         [
-            {"number": 1, "response": '"number": 1, "factorial": 1}'},
-            {"number": 2, "response": '"number": 2, "factorial": 2}'},
-            {"number": 3, "response": '"number": 3, "factorial": 6}'},
+            {},
+            {},
+            {},
         ]
     )
     print(result)

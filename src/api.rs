@@ -13,8 +13,8 @@ pub enum ApiError {
 impl fmt::Display for ApiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ApiError::Non200Status { status, text } => write!(f, "Error {}: {}", status, text),
-            ApiError::ReqwestError(e) => write!(f, "Request error: {}", e),
+            ApiError::Non200Status { status, text } => write!(f, "Response error {}: {}", status, text),
+            ApiError::ReqwestError(e) => write!(f, "Request error: non-200 status code {}", e),
         }
     }
 }
@@ -37,19 +37,23 @@ impl From<Error> for ApiError {
 pub fn make_request(endpoint: &String, params: &HashMap<&str, &str>) -> Result<String, ApiError> {
     let client = Client::new();
 
-    let response = client
+    let response_result = client
         .get(endpoint)
         .query(&params)
-        .send()?;
+        .send();
     
-    let status = response.status().as_u16();
-
-    if status != 200 {
-        let text = response.text().unwrap_or_else(|_| "Failed to read response text".to_string());
-        return Err(ApiError::Non200Status { status, text });
+    match response_result {
+        Ok(response) => {
+            let status = response.status().as_u16();
+            if status != 200 {
+                let text = response.text().unwrap_or_else(|_| "Failed to read response text".to_string());
+                return Err(ApiError::Non200Status { status, text });
+            }
+            let text = response.text()?;
+            Ok(text)
+        }
+        Err(err) => {
+            Err(ApiError::ReqwestError(err))
+        },
     }
-
-    let text = response.text()?;
-
-    Ok(text)
 }
