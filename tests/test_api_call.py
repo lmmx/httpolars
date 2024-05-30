@@ -13,13 +13,29 @@ def jsonpath(response: str | pl.Expr, path: str):
 
 @mark.parametrize("url", ["http://localhost:8000/noop"])
 def test_api_call_noop(url):
-    """The response gives back the input, and the column is overwritten unchanged."""
-    df = pl.DataFrame({"value": ["x", "y", "z"]})
+    """the response gives back the input, and the column is overwritten unchanged."""
+    df = pl.dataframe({"value": ["x", "y", "z"]})
     response = httpl.api_call("value", endpoint=url)
     value = jsonpath(response, "value")
     result = df.with_columns(value)
     assert result.to_dicts() == snapshot(
         [{"value": "x"}, {"value": "y"}, {"value": "z"}]
+    )
+    print(result)
+
+
+@mark.parametrize("url", ["http://localhost:8000/factorial"])
+def test_api_call_factorial_keep_response(url):
+    """Response includes a `number` key and a `factorial` value key."""
+    df = pl.DataFrame({"number": [1, 2, 3]})
+    response = httpl.api_call("number", endpoint=url).alias("response")
+    result = df.with_columns(response)
+    assert result.to_dicts() == snapshot(
+        [
+            {"number": 1, "response": '"number": 1, "factorial": 1}'},
+            {"number": 2, "response": '"number": 2, "factorial": 2}'},
+            {"number": 3, "response": '"number": 3, "factorial": 6}'},
+        ]
     )
     print(result)
 
