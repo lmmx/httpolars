@@ -5,7 +5,7 @@ from pytest import mark
 import httpolars as httpl
 
 
-def jsonpath(response: str | pl.Expr, path: str = "", status_code: bool = False):
+def jsonpath(response: str | pl.Expr, *, path: str = "", status_code: bool = False):
     """Accept either the response `Expr` or reference by its column name."""
     response = pl.col(response) if isinstance(response, str) else response
     if path:
@@ -17,12 +17,12 @@ def jsonpath(response: str | pl.Expr, path: str = "", status_code: bool = False)
 
 
 @mark.parametrize("url", ["http://localhost:8000/noop"])
-def test_api_call_noop(url):
+def test_api_call_noop(client, url):
     """the response gives back the input, and the column is overwritten unchanged."""
     df = pl.DataFrame({"value": ["x", "y", "z"]})
     response = httpl.api_call("value", endpoint=url)
-    value = jsonpath(response, "value")
-    result = df.with_columns(value)
+    # value = jsonpath("response", path="value").alias("response")
+    result = df.with_columns(response) #.with_columns(value)
     assert result.to_dicts() == snapshot(
         [{"value": "x"}, {"value": "y"}, {"value": "z"}]
     )
@@ -30,7 +30,7 @@ def test_api_call_noop(url):
 
 
 @mark.parametrize("url", ["http://localhost:8000/permafailure"])
-def test_api_call_permafailure_keep_status(url):
+def test_api_call_permafailure_keep_status(client, url):
     """Response is never obtained, always fails (429)."""
     df = pl.DataFrame({"futile": [0, 10, 20]})
     response = httpl.api_call("futile", endpoint=url).alias("response")
@@ -56,7 +56,7 @@ def test_api_call_permafailure_keep_status(url):
 
 
 @mark.parametrize("url", ["http://localhost:8000/factorial"])
-def test_api_call_factorial(url):
+def test_api_call_factorial(client, url):
     """Response includes a `number` key and a `factorial` value key."""
     df = pl.DataFrame({"number": [1, 2, 3]})
     response = httpl.api_call("number", endpoint=url).alias("response")
