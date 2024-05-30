@@ -11,7 +11,7 @@ def jsonpath(response: str | pl.Expr, path: str = "", status_code: bool = False)
     if path:
         return response.str.json_path_match(f"$.text.{path}")
     elif status_code:
-        return response.str.json_path_match(f"$.error.status")
+        return response.str.json_path_match(f"$.status_code")
     else:
         return response
 
@@ -30,12 +30,12 @@ def test_api_call_noop(url):
 
 
 @mark.parametrize("url", ["http://localhost:8000/permafailure"])
-def test_api_call_permafailure_keep_response(url):
+def test_api_call_permafailure_keep_status(url):
     """Response is never obtained, always fails (429)."""
     df = pl.DataFrame({"futile": [0, 10, 20]})
-    response = httpl.api_call("futile", endpoint=url)
+    response = httpl.api_call("futile", endpoint=url).alias("response")
     status = jsonpath(response, status_code=True).str.to_integer().alias("status")
-    result = df.with_columns(response)
+    result = df.with_columns(status)
     assert result.to_dicts() == snapshot(
         [
             {
@@ -44,11 +44,11 @@ def test_api_call_permafailure_keep_response(url):
             },
             {
                 "futile": 10,
-                "response": 429,
+                "status": 429,
             },
             {
                 "futile": 20,
-                "response": 429,
+                "status": 429,
             },
         ]
     )
