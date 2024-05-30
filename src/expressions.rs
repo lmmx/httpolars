@@ -73,20 +73,6 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
     let endpoint = &kwargs.endpoint;
 
     let (response_texts, status_codes) = match s.dtype() {
-        // DataType::String => {
-        //     let ca = s.str()?;
-        //     StringChunked::from_iter(
-        //         ca.into_iter().map(|opt_v| opt_v.map(|v| {
-        //             let mut params = HashMap::new();
-        //             params.insert(name, v);
-        //             match make_request(endpoint, &params) {
-        //             	Ok((response_text, status_code)) => (response_text, status_code),
-        //                 Err(e) => (format!("Error: {}", e), 0),
-        //             }
-        //         })
-        //         ),
-        //     ).into_series()
-        // },
         DataType::String => {
             let ca = s.str()?;
             let (texts, codes): (Vec<Option<String>>, Vec<Option<u32>>) = ca.into_iter().map(|opt_v| {
@@ -104,21 +90,6 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
 				UInt32Chunked::from_iter(codes.into_iter()).into_series()
 			)
         },
-        // DataType::Int32 => {
-        //     let ca = s.i32()?;
-        //     StringChunked::from_iter(
-        //         ca.into_iter().map(|opt_v| opt_v.map(|v| {
-        //             let mut params = HashMap::new();
-        //             let v_str = v.to_string();
-        //             params.insert(name, v_str.as_str());
-        //             match make_request(endpoint, &params) {
-        //             	Ok((response_text, status_code)) => (response_text, status_code),
-        //                 Err(e) => (format!("Error: {}", e), 0),
-        //             }
-        //         })
-        //         ),
-        //     ).into_series()
-        // },
         DataType::Int32 => {
             let ca = s.i32()?;
             let (texts, codes): (Vec<Option<String>>, Vec<Option<u32>>) = ca.into_iter().map(|opt_v| {
@@ -137,21 +108,6 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
 				UInt32Chunked::from_iter(codes.into_iter()).into_series()
 			)
         },
-        // DataType::Int64 => {
-        //     let ca = s.i64()?;
-        //     StringChunked::from_iter(
-        //         ca.into_iter().map(|opt_v| opt_v.map(|v| {
-        //             let mut params = HashMap::new();
-        //             let v_str = v.to_string();
-        //             params.insert(name, v_str.as_str());
-        //             match make_request(endpoint, &params) {
-        //             	Ok((response_text, status_code)) => (response_text, status_code),
-        //                 Err(e) => (format!("Error: {}", e), 0),
-        //             }
-        //         })
-        //         ),
-        //     ).into_series()
-        // },
         DataType::Int64 => {
             let ca = s.i64()?;
             let (texts, codes): (Vec<Option<String>>, Vec<Option<u32>>) = ca.into_iter().map(|opt_v| {
