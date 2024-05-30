@@ -5,16 +5,21 @@ from pytest import mark
 import httpolars as httpl
 
 
-def jsonpath(response: str | pl.Expr, path: str):
+def jsonpath(response: str | pl.Expr, path: str = "", status_code: bool = False):
     """Accept either the response `Expr` or reference by its column name."""
     response = pl.col(response) if isinstance(response, str) else response
-    return response.str.json_path_match(f"$.{path}")
+    if path:
+        return response.str.json_path_match(f"$.text.{path}")
+    elif status_code:
+        return response.str.json_path_match(f"$.error.status")
+    else:
+        return response
 
 
 @mark.parametrize("url", ["http://localhost:8000/noop"])
 def test_api_call_noop(url):
     """the response gives back the input, and the column is overwritten unchanged."""
-    df = pl.dataframe({"value": ["x", "y", "z"]})
+    df = pl.DataFrame({"value": ["x", "y", "z"]})
     response = httpl.api_call("value", endpoint=url)
     value = jsonpath(response, "value")
     result = df.with_columns(value)
@@ -28,13 +33,23 @@ def test_api_call_noop(url):
 def test_api_call_permafailure_keep_response(url):
     """Response is never obtained, always fails (429)."""
     df = pl.DataFrame({"futile": [0, 10, 20]})
-    response = httpl.api_call("futile", endpoint=url).alias("response")
+    response = httpl.api_call("futile", endpoint=url)
+    status = jsonpath(response, status_code=True).str.to_integer().alias("status")
     result = df.with_columns(response)
     assert result.to_dicts() == snapshot(
         [
-            {},
-            {},
-            {},
+            {
+                "futile": 0,
+                "status": 429,
+            },
+            {
+                "futile": 10,
+                "response": 429,
+            },
+            {
+                "futile": 20,
+                "response": 429,
+            },
         ]
     )
     print(result)
