@@ -67,7 +67,7 @@ struct ApiCallKwargs {
 }
 
 #[polars_expr(output_type=String)]
-fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
+fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<(Series, Series)> {
     let s = &inputs[0];
     let name = s.name();
     let endpoint = &kwargs.endpoint;
@@ -85,10 +85,7 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                     }
                 })
             }).unzip();
-            (
-				StringChunked::from_iter(texts).into_series(),
-				UInt32Chunked::from_iter(codes.into_iter()).into_series()
-			)
+            (StringChunked::from_iter(texts), UInt32Chunked::from_iter(codes.into_iter()))
         },
         DataType::Int32 => {
             let ca = s.i32()?;
@@ -103,10 +100,7 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                     }
                 })
             }).unzip();
-            (
-				StringChunked::from_iter(texts).into_series(),
-				UInt32Chunked::from_iter(codes.into_iter()).into_series()
-			)
+            (StringChunked::from_iter(texts), UInt32Chunked::from_iter(codes.into_iter()))
         },
         DataType::Int64 => {
             let ca = s.i64()?;
@@ -121,14 +115,11 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                     }
                 })
             }).unzip();
-            (
-				StringChunked::from_iter(texts).into_series(),
-				UInt32Chunked::from_iter(codes.into_iter()).into_series()
-			)
+            (StringChunked::from_iter(texts), UInt32Chunked::from_iter(codes.into_iter()))
         },
         dtype => polars_bail!(InvalidOperation:format!("Data type {dtype} not \
              supported for api_call, expected String, Int32, Int64.")),
     };
 
-    Ok(response_texts.into_series())
+    Ok((response_texts.into_series(), status_codes.into_series()))
 }
