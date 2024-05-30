@@ -5,7 +5,7 @@ use pyo3_polars::derive::polars_expr;
 use std::fmt::Write;
 use serde::Deserialize;
 use std::collections::HashMap;
-use crate::api::make_request;
+use crate::api::{make_request, ApiError};
 
 #[polars_expr(output_type=String)]
 fn pig_latinnify(inputs: &[Series]) -> PolarsResult<Series> {
@@ -67,59 +67,63 @@ struct ApiCallKwargs {
 }
 
 #[polars_expr(output_type=String)]
-fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<(Series, Series)> {
+fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
     let s = &inputs[0];
     let name = s.name();
     let endpoint = &kwargs.endpoint;
 
-    let (response_texts, status_codes) = match s.dtype() {
+    let response_texts = match s.dtype() {
         DataType::String => {
             let ca = s.str()?;
-            let (texts, codes): (Vec<Option<String>>, Vec<Option<u32>>) = ca.into_iter().map(|opt_v| {
-                opt_v.map_or((None, None), |v| {
+            let texts: Vec<Option<String>> = ca.into_iter().map(|opt_v| {
+                opt_v.map_or(None, |v| {
                     let mut params = HashMap::new();
                     params.insert(name, v);
                     match make_request(endpoint, &params) {
-                        Ok((response_text, status_code)) => (Some(response_text), Some(status_code as u32)),
-                        Err(e) => (Some(format!("Error: {}", e)), Some(0)),
+                        Ok(response_text) => Some(response_text),
+                        Err(ApiError::ReqwestError(e)) => Some(format!("Request Error: {}", e)),
+                        Err(ApiError::Non200Status { status, text }) => Some(format!("Error {}: {}", status, text)),
                     }
                 })
-            }).unzip();
-            (StringChunked::from_iter(texts), UInt32Chunked::from_iter(codes.into_iter()))
+            }).collect();
+            StringChunked::from_iter(texts)
         },
         DataType::Int32 => {
             let ca = s.i32()?;
-            let (texts, codes): (Vec<Option<String>>, Vec<Option<u32>>) = ca.into_iter().map(|opt_v| {
-                opt_v.map_or((None, None), |v| {
+            let texts: Vec<Option<String>> = ca.into_iter().map(|opt_v| {
+                opt_v.map_or(None, |v| {
                     let mut params = HashMap::new();
                     let v_str = v.to_string();
                     params.insert(name, v_str.as_str());
                     match make_request(endpoint, &params) {
-                        Ok((response_text, status_code)) => (Some(response_text), Some(status_code as u32)),
-                        Err(e) => (Some(format!("Error: {}", e)), Some(0)),
+                        Ok(response_text) => Some(response_text),
+                        Err(ApiError::ReqwestError(e)) => Some(format!("Request Error: {}", e)),
+                        Err(ApiError::Non200Status { status, text }) => Some(format!("Error {}: {}", status, text)),
                     }
                 })
-            }).unzip();
-            (StringChunked::from_iter(texts), UInt32Chunked::from_iter(codes.into_iter()))
+            }).collect();
+            StringChunked::from_iter(texts)
         },
         DataType::Int64 => {
             let ca = s.i64()?;
-            let (texts, codes): (Vec<Option<String>>, Vec<Option<u32>>) = ca.into_iter().map(|opt_v| {
-                opt_v.map_or((None, None), |v| {
+            let texts: Vec<Option<String>> = ca.into_iter().map(|opt_v| {
+                opt_v.map_or(None, |v| {
                     let mut params = HashMap::new();
                     let v_str = v.to_string();
                     params.insert(name, v_str.as_str());
                     match make_request(endpoint, &params) {
-                        Ok((response_text, status_code)) => (Some(response_text), Some(status_code as u32)),
-                        Err(e) => (Some(format!("Error: {}", e)), Some(0)),
+                        Ok(response_text) => Some(response_text),
+                        Err(ApiError::ReqwestError(e)) => Some(format!("Request Error: {}", e)),
+                        Err(ApiError::Non200Status { status, text }) => Some(format!("Error {}: {}", status, text)),
                     }
                 })
-            }).unzip();
-            (StringChunked::from_iter(texts), UInt32Chunked::from_iter(codes.into_iter()))
+            }).collect();
+            StringChunked::from_iter(texts)
         },
         dtype => polars_bail!(InvalidOperation:format!("Data type {dtype} not \
              supported for api_call, expected String, Int32, Int64.")),
     };
 
-    Ok((response_texts.into_series(), status_codes.into_series()))
+    // let struct_series = StructChunked::new(&[("response_text", response_texts), ("status_code", status_codes)])?.into_series();
+    Ok(response_texts.into_series())
 }
