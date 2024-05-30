@@ -13,8 +13,8 @@ pub enum ApiError {
 impl fmt::Display for ApiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ApiError::ReqwestError(e) => write!(f, "Request error: {}", e),
             ApiError::Non200Status { status, text } => write!(f, "Error {}: {}", status, text),
+            ApiError::ReqwestError(e) => write!(f, "Request error: {}", e),
         }
     }
 }
@@ -43,11 +43,13 @@ pub fn make_request(endpoint: &String, params: &HashMap<&str, &str>) -> Result<S
         .send()?;
     
     let status = response.status().as_u16();
-    let text = response.text()?;
 
     if status != 200 {
+        let text = response.text().unwrap_or_else(|_| "Failed to read response text".to_string());
         return Err(ApiError::Non200Status { status, text });
     }
+
+    let text = response.text()?;
 
     Ok(text)
 }
