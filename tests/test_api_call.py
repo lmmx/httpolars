@@ -10,10 +10,11 @@ def jsonpath(response: str | pl.Expr, *, text: bool = False, status_code: bool =
     response = pl.col(response) if isinstance(response, str) else response
     if (text and status_code) or not (text or status_code):
         raise NotImplementedError
+    subpath = response.str.json_path_match
     if text:
-        return response.str.json_path_match(f"$.text").str.json_decode()
+        return subpath(f"$.text").str.json_decode()
     if status_code:
-        return response.str.json_path_match(f"$.status_code")
+        return subpath(f"$.status_code").str.json_decode().alias("status")
 
 
 @mark.parametrize("url", ["http://localhost:8000/noop"])
@@ -35,7 +36,7 @@ def test_api_call_permafailure_keep_status(client, url):
     """Response is never obtained, always fails (429)."""
     df = pl.DataFrame({"futile": [0, 10, 20]})
     response = httpl.api_call("futile", endpoint=url).alias("response")
-    status = jsonpath(response, status_code=True).str.to_integer().alias("status")
+    status = jsonpath(response, status_code=True)
     result = df.with_columns(status)
     assert result.to_dicts() == snapshot(
         [
@@ -63,15 +64,12 @@ def test_api_call_factorial(client, url):
     response = httpl.api_call("number", endpoint=url).alias("response")
     parsed = jsonpath(response, text=True)
     result_pre = df.with_columns(parsed)
-    result = result_pre.with_columns([
-        pl.col("response").struct.field("number").alias("supplied"),
-        pl.col("response").struct.field("factorial").alias("permutations"),
-    ]).drop("response")
+    result = result_pre.select("response").unnest("response")
     assert result.to_dicts() == snapshot(
         [
-            {"number": 1, "supplied": 1, "permutations": 1},
-            {"number": 2, "supplied": 2, "permutations": 2},
-            {"number": 3, "supplied": 3, "permutations": 6},
+            {"number": 1, "factorial": 1},
+            {"number": 2, "factorial": 2},
+            {"number": 3, "factorial": 6},
         ]
     )
     print(result)
