@@ -12,19 +12,19 @@ def jsonpath(response: str | pl.Expr, *, text: bool = False, status_code: bool =
         raise NotImplementedError
     subpath = response.str.json_path_match
     if text:
-        return subpath(f"$.text").str.json_decode()
+        return subpath("$.text}").str.json_decode()
     if status_code:
-        return subpath(f"$.status_code").str.json_decode().alias("status")
+        return subpath("$.status_code").str.json_decode().alias("status")
 
 
 @mark.parametrize("url", ["http://localhost:8000/noop"])
-def test_api_call_noop(client, url):
+def test_api_call_noop(url):
     """the response gives back the input, and the column is overwritten unchanged."""
     df = pl.DataFrame({"value": ["x", "y", "z"]})
     response = httpl.api_call("value", endpoint=url)
     value = jsonpath("value", text=True)
     result_pre = df.with_columns(response)
-    result = result_pre.with_columns(value).select(pl.col("value").struct.field("value"))
+    result = result_pre.select(value).select(pl.col("value").struct.field("value"))
     assert result.to_dicts() == snapshot(
         [{"value": "x"}, {"value": "y"}, {"value": "z"}]
     )
@@ -32,7 +32,7 @@ def test_api_call_noop(client, url):
 
 
 @mark.parametrize("url", ["http://localhost:8000/permafailure"])
-def test_api_call_permafailure_keep_status(client, url):
+def test_api_call_permafailure_keep_status(url):
     """Response is never obtained, always fails (429)."""
     df = pl.DataFrame({"futile": [0, 10, 20]})
     response = httpl.api_call("futile", endpoint=url).alias("response")
@@ -58,7 +58,7 @@ def test_api_call_permafailure_keep_status(client, url):
 
 
 @mark.parametrize("url", ["http://localhost:8000/factorial"])
-def test_api_call_factorial(client, url):
+def test_api_call_factorial(url):
     """Response includes a `number` key and a `factorial` value key."""
     df = pl.DataFrame({"number": [1, 2, 3]})
     response = httpl.api_call("number", endpoint=url).alias("response")
