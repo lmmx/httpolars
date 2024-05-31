@@ -11,7 +11,7 @@ def client():
     return TestClient(app)
 
 
-@fixture(scope="module")
+# @fixture(scope="module")
 def test_server():
     # Start the server in a separate process
     server_path = "httpolars.test_utils.rate_limit_server"

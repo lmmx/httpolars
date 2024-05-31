@@ -17,7 +17,7 @@ async def read_root():
 
 
 @app.get("/noop")
-@limiter.limit("40/2 seconds")
+@limiter.limit("400/2 seconds")
 async def read_noop(request: Request, value: str | None = None):
     return {"value": value}
 
