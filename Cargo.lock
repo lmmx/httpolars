@@ -484,6 +484,7 @@ dependencies = [
  "pyo3-polars",
  "reqwest",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
