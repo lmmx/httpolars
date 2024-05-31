@@ -12,7 +12,7 @@ def jsonpath(response: str | pl.Expr, *, text: bool = False, status_code: bool =
         raise NotImplementedError
     subpath = response.str.json_path_match
     if text:
-        return subpath("$.text}").str.json_decode()
+        return subpath("$.text").str.json_decode()
     if status_code:
         return subpath("$.status_code").str.json_decode().alias("status")
 
