@@ -3,7 +3,7 @@ use polars::prelude::*;
 use pyo3_polars::derive::polars_expr;
 use serde::Deserialize;
 use std::collections::HashMap;
-use crate::api::{make_request, ApiError, ApiResponse};
+use crate::api::{make_request, ApiClient, ApiError, ApiResponse};
 
 #[derive(Deserialize)]
 struct ApiCallKwargs {
@@ -11,7 +11,7 @@ struct ApiCallKwargs {
 }
 
 #[polars_expr(output_type=String)]
-fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
+fn api_call(inputs: &[Series], kwargs: ApiCallKwargs, client: Option<&PyCell<ApiClient>>) -> PolarsResult<Series> {
     let s = &inputs[0];
     let name = s.name();
     let endpoint = &kwargs.endpoint;
@@ -23,7 +23,7 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                 opt_v.map_or(None, |v| {
                     let mut params = HashMap::new();
                     params.insert(name, v);
-                    match make_request(endpoint, &params) {
+                    match make_request(endpoint, &params, client) {
                         Ok((text, status_code)) => {
                             let response = ApiResponse { text, status_code };
                             Some(serde_json::to_string(&response).unwrap())
@@ -48,7 +48,7 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                     let mut params = HashMap::new();
                     let v_str = v.to_string();
                     params.insert(name, v_str.as_str());
-                    match make_request(endpoint, &params) {
+                    match make_request(endpoint, &params, client) {
                         Ok((text, status_code)) => {
                             let response = ApiResponse { text, status_code };
                             Some(serde_json::to_string(&response).unwrap())
@@ -73,7 +73,7 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                     let mut params = HashMap::new();
                     let v_str = v.to_string();
                     params.insert(name, v_str.as_str());
-                    match make_request(endpoint, &params) {
+                    match make_request(endpoint, &params, client) {
                         Ok((text, status_code)) => {
                             let response = ApiResponse { text, status_code };
                             Some(serde_json::to_string(&response).unwrap())
