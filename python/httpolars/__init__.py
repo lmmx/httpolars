@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import polars as pl
 
 from .utils import parse_into_expr, parse_version, register_plugin
+from ._lib import *
 
 if TYPE_CHECKING:
     from polars.type_aliases import IntoExpr
