@@ -1,20 +1,23 @@
 #![allow(clippy::unused_unit)]
 use polars::prelude::*;
+use pyo3::prelude::*;
 use pyo3_polars::derive::polars_expr;
 use serde::Deserialize;
 use std::collections::HashMap;
 use crate::api::{make_request, ApiClient, ApiError, ApiResponse};
 
 #[derive(Deserialize)]
-struct ApiCallKwargs {
+struct ApiCallKwargs<'a> {
     endpoint: String,
+    client: Option<&'a PyCell<ApiClient>>,
 }
 
 #[polars_expr(output_type=String)]
-fn api_call(inputs: &[Series], kwargs: ApiCallKwargs, client: Option<&PyCell<ApiClient>>) -> PolarsResult<Series> {
+fn api_call<'a>(inputs: &[Series], kwargs: ApiCallKwargs<'a>) -> PolarsResult<Series> {
     let s = &inputs[0];
     let name = s.name();
     let endpoint = &kwargs.endpoint;
+    let client = &kwargs.client;
 
     let response_texts = match s.dtype() {
         DataType::String => {

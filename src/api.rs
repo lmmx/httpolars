@@ -116,7 +116,7 @@ pub fn make_request(
     let client = match client {
         Some(api_client) => &api_client.borrow().client,
         None => {
-            default_client = Client::new(),
+            default_client = Client::new();
             &default_client
         }
     };
