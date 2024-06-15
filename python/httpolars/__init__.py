@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import polars as pl
 
 from .utils import parse_into_expr, parse_version, register_plugin
+from ._lib import ApiClient, create_api_client
 
 if TYPE_CHECKING:
     from polars.type_aliases import IntoExpr
@@ -18,7 +19,7 @@ if parse_version(pl.__version__) < parse_version("0.20.16"):
 else:
     lib = Path(__file__).parent
 
-__all__ = ["abs_i64", "sum_i64", "add_suffix"]
+__all__ = ["api_call", "ApiClient", "create_api_client"]
 
 
 def plug(expr, **kwargs) -> pl.Expr:
