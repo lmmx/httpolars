@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import polars as pl
 
-from .utils import parse_into_expr, parse_version, register_plugin
+from .utils import parse_into_expr, parse_version
 from ._lib import ApiClient, create_api_client
 
 if TYPE_CHECKING:
