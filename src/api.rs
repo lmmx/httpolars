@@ -1,4 +1,4 @@
-use reqwest::blocking::Client;
+use reqwest::Client;
 use reqwest::Error;
 use std::collections::HashMap;
 use std::fmt;
@@ -40,23 +40,22 @@ impl From<Error> for ApiError {
     }
 }
 
-pub fn make_request(endpoint: &String, params: &HashMap<&str, &str>) -> Result<(String, u16), ApiError> {
-    let client = Client::new();
-
+pub async fn make_request(client: Client, endpoint: &String, params: &HashMap<&str, &str>) -> Result<(String, u16), ApiError> {
     let response_result = client
         .get(endpoint)
         .query(&params)
-        .send();
+        .send()
+        .await?;
     
     match response_result {
         Ok(response) => {
             let status = response.status().as_u16();
             if status != 200 {
                 // I don't think this is ever used?
-                let text = response.text().unwrap_or_else(|_| "Failed to read response text".to_string());
+                let text = response.text().await.unwrap_or_else(|_| "Failed to read response text".to_string());
                 return Err(ApiError::Non200Status { text, status });
             }
-            let text = response.text()?;
+            let text = response.text().await?;
             Ok((text, status))
         }
         Err(err) => {
