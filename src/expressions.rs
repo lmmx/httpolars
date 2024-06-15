@@ -10,29 +10,29 @@ struct ApiCallKwargs {
     endpoint: String,
 }
 
+fn handle_api_response(endpoint: &String, params: &HashMap<&str, &str>) -> Option<String> {
+    match make_request(endpoint, params) {
+        Ok((text, status_code)) => {
+            let response = ApiResponse { text, status_code };
+            Some(serde_json::to_string(&response).unwrap())
+        },
+        Err(ApiError::ReqwestError(e)) => {
+            let response = ApiResponse { text: format!("Request Error: {}", e), status_code: 500 };
+            Some(serde_json::to_string(&response).unwrap())
+        },
+        Err(ApiError::Non200Status { text, status }) => {
+            let response = ApiResponse { text, status_code: status };
+            Some(serde_json::to_string(&response).unwrap())
+        }
+    }
+}
+
+
 #[polars_expr(output_type=String)]
 fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
     let s = &inputs[0];
     let name = s.name();
     let endpoint = &kwargs.endpoint;
-
-    fn handle_api_response(endpoint: &String, params: &HashMap<&str, &str>) -> Option<String> {
-        match make_request(endpoint, params) {
-            Ok((text, status_code)) => {
-                let response = ApiResponse { text, status_code };
-                Some(serde_json::to_string(&response).unwrap())
-            },
-            Err(ApiError::ReqwestError(e)) => {
-                let response = ApiResponse { text: format!("Request Error: {}", e), status_code: 500 };
-                Some(serde_json::to_string(&response).unwrap())
-            },
-            Err(ApiError::Non200Status { text, status }) => {
-                let response = ApiResponse { text, status_code: status };
-                Some(serde_json::to_string(&response).unwrap())
-            }
-        }
-    }
-
     let response_texts = match s.dtype() {
         DataType::String => {
             let ca = s.str()?;
