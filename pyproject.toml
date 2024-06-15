@@ -21,3 +21,7 @@ test = [
     "fastapi>=0.111.0",
     "slowapi>=0.1.9",
 ]
+
+[tool.maturin]
+module-name = "httpolars._lib"
+python-source = "python"
