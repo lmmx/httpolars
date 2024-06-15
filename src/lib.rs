@@ -1,3 +1,6 @@
+use pyo3::prelude::*;
+use pyo3::wrap_pyfunction;
+
 mod expressions;
 mod utils;
 mod api;
@@ -9,11 +12,10 @@ use jemallocator::Jemalloc;
 #[cfg(target_os = "linux")]
 static ALLOC: Jemalloc = Jemalloc;
 
-use pyo3::types::PyModule;
-use pyo3::{pymodule, PyResult, Python};
-
 #[pymodule]
-fn httpolars(_py: Python, m: &PyModule) -> PyResult<()> {
+fn _lib(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+    m.add_class::<api::ApiClient>()?;
+    m.add_function(wrap_pyfunction!(api::create_api_client, m)?)?;
     Ok(())
 }
