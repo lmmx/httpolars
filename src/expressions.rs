@@ -43,11 +43,11 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
             let ca = s.str()?;
             let rt = Runtime::new().unwrap();
             let futures: Vec<_> = ca.into_iter().map(|opt_v| {
+                let client = client.clone();
+                let endpoint = endpoint.clone();
                 tokio::spawn(async move {
                     match opt_v {
                         Some(v) => {
-                            let client = client.clone();
-                            let endpoint = endpoint.clone();
                             let mut params = HashMap::new();
                             params.insert(name.clone(), v);
                             handle_api_response(client, &endpoint, &params)
@@ -71,11 +71,11 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
             let ca = s.i32()?;
             let rt = Runtime::new().unwrap();
             let futures: Vec<_> = ca.into_iter().map(|opt_v| {
+                let client = client.clone();
+                let endpoint = endpoint.clone();
                 tokio::spawn(async move {
                     match opt_v {
                         Some(v) => {
-                            let client = client.clone();
-                            let endpoint = endpoint.clone();
                             let v_str = v.to_string();
                             let mut params = HashMap::new();
                             params.insert(name.clone(), v_str.as_str());
@@ -100,11 +100,11 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
             let ca = s.i64()?;
             let rt = Runtime::new().unwrap();
             let futures: Vec<_> = ca.into_iter().map(|opt_v| {
+                let client = client.clone();
+                let endpoint = endpoint.clone();
                 tokio::spawn(async move {
                     match opt_v {
                         Some(v) => {
-                            let client = client.clone();
-                            let endpoint = endpoint.clone();
                             let v_str = v.to_string();
                             let mut params = HashMap::new();
                             params.insert(name.clone(), v_str.as_str());
