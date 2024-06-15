@@ -21,7 +21,7 @@ async def read_root():
 @app.get("/hi")
 async def read_hi(request: Request, number: int | None = None):
     await sleep(1)
-    return {"Hi": value}
+    return {"Hi": number}
 
 
 @app.get("/noop")
