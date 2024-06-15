@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import polars as pl
 
-from .utils import parse_into_expr, parse_version, register_plugin
+from .utils import parse_into_expr, parse_version
 from ._lib import ApiClient, create_api_client
 
 if TYPE_CHECKING:
@@ -26,18 +26,6 @@ def plug(expr, **kwargs) -> pl.Expr:
     """Wrap the `register_expr_plugin` helper to always pass `lib` (invariant)."""
     func_name = inspect.stack()[1].function
     return parse_into_expr(expr).register_plugin(symbol=func_name, lib=lib, **kwargs)
-
-
-def abs_i64(expr: IntoExpr) -> pl.Expr:
-    return plug(expr, is_elementwise=True)
-
-
-def sum_i64(expr: IntoExpr, other: IntoExpr) -> pl.Expr:
-    return plug(expr, is_elementwise=True, args=[other])
-
-
-def add_suffix(expr: IntoExpr, *, suffix: str) -> pl.Expr:
-    return plug(expr, is_elementwise=True, kwargs={"suffix": suffix})
 
 
 def api_call(expr: IntoExpr, *, endpoint: str) -> pl.Expr:

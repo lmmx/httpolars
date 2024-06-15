@@ -16,6 +16,23 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
     let name = s.name();
     let endpoint = &kwargs.endpoint;
 
+    fn handle_api_response(endpoint: &String, params: &HashMap<&str, &str>) -> Option<String> {
+        match make_request(endpoint, params) {
+            Ok((text, status_code)) => {
+                let response = ApiResponse { text, status_code };
+                Some(serde_json::to_string(&response).unwrap())
+            },
+            Err(ApiError::ReqwestError(e)) => {
+                let response = ApiResponse { text: format!("Request Error: {}", e), status_code: 500 };
+                Some(serde_json::to_string(&response).unwrap())
+            },
+            Err(ApiError::Non200Status { text, status }) => {
+                let response = ApiResponse { text, status_code: status };
+                Some(serde_json::to_string(&response).unwrap())
+            }
+        }
+    }
+
     let response_texts = match s.dtype() {
         DataType::String => {
             let ca = s.str()?;
@@ -23,20 +40,7 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                 opt_v.map_or(None, |v| {
                     let mut params = HashMap::new();
                     params.insert(name, v);
-                    match make_request(endpoint, &params) {
-                        Ok((text, status_code)) => {
-                            let response = ApiResponse { text, status_code };
-                            Some(serde_json::to_string(&response).unwrap())
-                        },
-                        Err(ApiError::ReqwestError(e)) => {
-                            let response = ApiResponse { text: format!("Request Error: {}", e), status_code: 500 };
-							Some(serde_json::to_string(&response).unwrap())
-						},
-						Err(ApiError::Non200Status { text, status }) => {
-                            let response = ApiResponse { text, status_code: status };
-                            Some(serde_json::to_string(&response).unwrap())
-                        }
-                    }
+                    handle_api_response(endpoint, &params)
                 })
             }).collect();
             StringChunked::from_iter(texts)
@@ -48,20 +52,7 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                     let mut params = HashMap::new();
                     let v_str = v.to_string();
                     params.insert(name, v_str.as_str());
-                    match make_request(endpoint, &params) {
-                        Ok((text, status_code)) => {
-                            let response = ApiResponse { text, status_code };
-                            Some(serde_json::to_string(&response).unwrap())
-                        },
-                        Err(ApiError::ReqwestError(e)) => {
-                            let response = ApiResponse { text: format!("Request Error: {}", e), status_code: 500 };
-							Some(serde_json::to_string(&response).unwrap())
-						},
-						Err(ApiError::Non200Status { text, status }) => {
-                            let response = ApiResponse { text, status_code: status };
-                            Some(serde_json::to_string(&response).unwrap())
-                        }
-                    }
+                    handle_api_response(endpoint, &params)
                 })
             }).collect();
             StringChunked::from_iter(texts)
@@ -73,20 +64,7 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                     let mut params = HashMap::new();
                     let v_str = v.to_string();
                     params.insert(name, v_str.as_str());
-                    match make_request(endpoint, &params) {
-                        Ok((text, status_code)) => {
-                            let response = ApiResponse { text, status_code };
-                            Some(serde_json::to_string(&response).unwrap())
-                        },
-                        Err(ApiError::ReqwestError(e)) => {
-                            let response = ApiResponse { text: format!("Request Error: {}", e), status_code: 500 };
-							Some(serde_json::to_string(&response).unwrap())
-						},
-						Err(ApiError::Non200Status { text, status }) => {
-                            let response = ApiResponse { text, status_code: status };
-                            Some(serde_json::to_string(&response).unwrap())
-                        }
-                    }
+                    handle_api_response(endpoint, &params)
                 })
             }).collect();
             StringChunked::from_iter(texts)
