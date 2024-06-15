@@ -2,8 +2,8 @@ import httpx
 from pytest import mark
 
 
-def test_read_root_test_client(client):
-    response = client.get("/")
+def test_read_root_test_client(test_client):
+    response = test_client.get("/")
     assert response.status_code == 200
     assert response.json() == {"Hello": "World"}
 
