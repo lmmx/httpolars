@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+from asyncio import sleep
 
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
@@ -13,6 +14,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.get("/")
 async def read_root():
+    await sleep(1)
     return {"Hello": "World"}
 
 
