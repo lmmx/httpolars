@@ -7,7 +7,7 @@ from httpolars.test_utils.rate_limit_server import app
 
 
 @fixture
-def client():
+def test_client():
     return TestClient(app)
 
 
