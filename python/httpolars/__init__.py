@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import polars as pl
+from polars.plugins import register_plugin_function
 
 from .utils import parse_into_expr, parse_version
 from ._lib import ApiClient, create_api_client
@@ -25,7 +26,8 @@ __all__ = ["api_call", "ApiClient", "create_api_client"]
 def plug(expr, **kwargs) -> pl.Expr:
     """Wrap the `register_expr_plugin` helper to always pass `lib` (invariant)."""
     func_name = inspect.stack()[1].function
-    return parse_into_expr(expr).register_plugin(symbol=func_name, lib=lib, **kwargs)
+    into_expr = parse_into_expr(expr)
+    return register_plugin_function(plugin_path=lib, function_name=func_name, args=into_expr, **kwargs)
 
 
 def api_call(expr: IntoExpr, *, endpoint: str) -> pl.Expr:
