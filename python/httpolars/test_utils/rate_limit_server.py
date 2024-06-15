@@ -18,6 +18,12 @@ async def read_root():
     return {"Hello": "World"}
 
 
+@app.get("/hi")
+async def read_hi(request: Request, number: int | None = None):
+    await sleep(1)
+    return {"Hi": value}
+
+
 @app.get("/noop")
 @limiter.limit("400/2 seconds")
 async def read_noop(request: Request, value: str | None = None):
