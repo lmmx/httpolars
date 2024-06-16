@@ -45,7 +45,7 @@ pub async fn make_request(client: Client, endpoint: &String, params: &HashMap<&s
         .get(endpoint)
         .query(&params)
         .send()
-        .await?;
+        .await;
     
     match response_result {
         Ok(response) => {
