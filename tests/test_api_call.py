@@ -74,14 +74,14 @@ def test_api_call_factorial(url):
     print(result)
 
 
-@mark.parametrize("url", ["http://localhost:8000/incremented"])
-def test_api_call_incremented(url):
+@mark.parametrize("url,n_results", [("http://localhost:8000/incremented", 5_000)])
+def test_api_call_incremented(url, n_results):
     """Response includes a `incremented` key (no-op, not rate limited)."""
-    df = pl.DataFrame().with_columns(number=pl.int_range(0, 1000))
+    df = pl.DataFrame().with_columns(number=pl.int_range(0, n_results))
     response = httpl.api_call("number", endpoint=url).alias("response")
     parsed = jsonpath(response, text=True)
     result_pre = df.with_columns(parsed)
     result = result_pre.unnest("response")
-    assert len(result) == snapshot(1000)
-    assert result.row(0) == snapshot((0, 1))
-    assert result.row(-1) == snapshot((999, 1000))
+    assert len(result) == n_results
+    assert result.row(0) == (0, 1)
+    assert result.row(-1) == (n_results - 1, n_results)

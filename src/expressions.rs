@@ -1,4 +1,5 @@
 #![allow(clippy::unused_unit)]
+use std::sync::Arc;
 use polars::prelude::*;
 use pyo3_polars::derive::polars_expr;
 use serde::Deserialize;
@@ -6,6 +7,7 @@ use std::collections::HashMap;
 use crate::api::{make_request, ApiError, ApiResponse};
 use reqwest::Client;
 use tokio::runtime::Runtime;
+use tokio::sync::Semaphore;
 use futures::future::join_all;
 
 #[derive(Deserialize)]
@@ -37,18 +39,26 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
     let name = s.name().to_string();
     let endpoint = &kwargs.endpoint;
     let client = Client::new();
+    let concurrency_limit = 800;
     let response_texts = match s.dtype() {
         DataType::String => {
             let ca = s.str()?;
+            let opt_v_owned: Vec<Option<String>> = ca.into_iter().map(|opt_v| opt_v.map(|v| v.to_string())).collect();
+
             let rt = Runtime::new().unwrap();
             let texts: Vec<Option<String>> = rt.block_on(async {
-                let futures: Vec<_> = ca.into_iter().map(|opt_v| {
+                let semaphore = Arc::new(Semaphore::new(concurrency_limit));
+                let mut futures = Vec::new();
+
+                for opt_v in opt_v_owned {
                     let client = client.clone();
                     let endpoint = endpoint.clone();
                     let name = name.clone();
-                    let opt_v_owned = opt_v.map(|v| v.to_string()); // Convert opt_v to an owned String
-                    tokio::spawn(async move {
-                        match opt_v_owned {
+                    let semaphore = semaphore.clone();
+
+                    let future = tokio::spawn(async move {
+                        let _permit = semaphore.acquire().await.unwrap();
+                        match opt_v {
                             Some(v) => {
                                 let name_owned = name.clone();
                                 let mut params = HashMap::new();
@@ -57,13 +67,16 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                             }
                             None => None
                         }
-                    })
-                }).collect();
+                    });
+                    futures.push(future);
+                }
+
                 let results = join_all(futures).await;
+
                 results.into_iter().map(|res| {
                     match res {
                         Ok(opt) => opt,
-                        Err(_) => None, // Handle the join error if needed
+                        Err(_) => None,
                     }
                 }).collect()
             });
@@ -72,15 +85,22 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
         },
         DataType::Int32 => {
             let ca = s.i32()?;
+            let opt_v_owned: Vec<Option<String>> = ca.into_iter().map(|opt_v| opt_v.map(|v| v.to_string())).collect();
+
             let rt = Runtime::new().unwrap();
             let texts: Vec<Option<String>> = rt.block_on(async {
-                let futures: Vec<_> = ca.into_iter().map(|opt_v| {
+                let semaphore = Arc::new(Semaphore::new(concurrency_limit));
+                let mut futures = Vec::new();
+
+                for opt_v in opt_v_owned {
                     let client = client.clone();
                     let endpoint = endpoint.clone();
                     let name = name.clone();
-                    let opt_v_owned = opt_v.map(|v| v.to_string()); // Convert opt_v to an owned String
-                    tokio::spawn(async move {
-                        match opt_v_owned {
+                    let semaphore = semaphore.clone();
+
+                    let future = tokio::spawn(async move {
+                        let _permit = semaphore.acquire().await.unwrap();
+                        match opt_v {
                             Some(v) => {
                                 let name_owned = name.clone();
                                 let mut params = HashMap::new();
@@ -89,13 +109,16 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                             }
                             None => None
                         }
-                    })
-                }).collect();
+                    });
+                    futures.push(future);
+                }
+
                 let results = join_all(futures).await;
+
                 results.into_iter().map(|res| {
                     match res {
                         Ok(opt) => opt,
-                        Err(_) => None, // Handle the join error if needed
+                        Err(_) => None,
                     }
                 }).collect()
             });
@@ -104,15 +127,22 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
         },
         DataType::Int64 => {
             let ca = s.i64()?;
+            let opt_v_owned: Vec<Option<String>> = ca.into_iter().map(|opt_v| opt_v.map(|v| v.to_string())).collect();
+
             let rt = Runtime::new().unwrap();
             let texts: Vec<Option<String>> = rt.block_on(async {
-                let futures: Vec<_> = ca.into_iter().map(|opt_v| {
+                let semaphore = Arc::new(Semaphore::new(concurrency_limit));
+                let mut futures = Vec::new();
+
+                for opt_v in opt_v_owned {
                     let client = client.clone();
                     let endpoint = endpoint.clone();
                     let name = name.clone();
-                    let opt_v_owned = opt_v.map(|v| v.to_string()); // Convert opt_v to an owned String
-                    tokio::spawn(async move {
-                        match opt_v_owned {
+                    let semaphore = semaphore.clone();
+
+                    let future = tokio::spawn(async move {
+                        let _permit = semaphore.acquire().await.unwrap();
+                        match opt_v {
                             Some(v) => {
                                 let name_owned = name.clone();
                                 let mut params = HashMap::new();
@@ -121,13 +151,16 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                             }
                             None => None
                         }
-                    })
-                }).collect();
+                    });
+                    futures.push(future);
+                }
+
                 let results = join_all(futures).await;
+
                 results.into_iter().map(|res| {
                     match res {
                         Ok(opt) => opt,
-                        Err(_) => None, // Handle the join error if needed
+                        Err(_) => None,
                     }
                 }).collect()
             });
