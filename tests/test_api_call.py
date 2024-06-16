@@ -1,8 +1,7 @@
+import httpolars as httpl
 import polars as pl
 from inline_snapshot import snapshot
 from pytest import mark
-
-import httpolars as httpl
 
 
 def jsonpath(response: str | pl.Expr, *, text: bool = False, status_code: bool = False):
@@ -73,3 +72,16 @@ def test_api_call_factorial(url):
         ]
     )
     print(result)
+
+
+@mark.parametrize("url", ["http://localhost:8000/incremented"])
+def test_api_call_incremented(url):
+    """Response includes a `incremented` key (no-op, not rate limited)."""
+    df = pl.DataFrame().with_columns(number=pl.int_range(0, 1000))
+    response = httpl.api_call("number", endpoint=url).alias("response")
+    parsed = jsonpath(response, text=True)
+    result_pre = df.with_columns(parsed)
+    result = result_pre.unnest("response")
+    assert len(result) == snapshot(1000)
+    assert result.row(0) == snapshot((0, 1))
+    assert result.row(-1) == snapshot((999, 1000))
