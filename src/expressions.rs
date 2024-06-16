@@ -41,94 +41,97 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
         DataType::String => {
             let ca = s.str()?;
             let rt = Runtime::new().unwrap();
-            let futures: Vec<_> = ca.into_iter().map(|opt_v| {
-                let client = client.clone();
-                let endpoint = endpoint.clone();
-                let name = name.clone();
-                let opt_v_owned = opt_v.map(|v| v.to_string()); // Convert opt_v to an owned String
-                tokio::spawn(async move {
-                    match opt_v_owned {
-                        Some(v) => {
-                            let name_owned = name.clone();
-                            let mut params = HashMap::new();
-                            params.insert(name_owned.as_str(), v.as_str());
-                            handle_api_response(client, &endpoint, &params).await
+            let texts: Vec<Option<String>> = rt.block_on(async {
+                let futures: Vec<_> = ca.into_iter().map(|opt_v| {
+                    let client = client.clone();
+                    let endpoint = endpoint.clone();
+                    let name = name.clone();
+                    let opt_v_owned = opt_v.map(|v| v.to_string()); // Convert opt_v to an owned String
+                    tokio::spawn(async move {
+                        match opt_v_owned {
+                            Some(v) => {
+                                let name_owned = name.clone();
+                                let mut params = HashMap::new();
+                                params.insert(name_owned.as_str(), v.as_str());
+                                handle_api_response(client, &endpoint, &params).await
+                            }
+                            None => None
                         }
-                        None => None
+                    })
+                }).collect();
+                let results = join_all(futures).await;
+                results.into_iter().map(|res| {
+                    match res {
+                        Ok(opt) => opt,
+                        Err(_) => None, // Handle the join error if needed
                     }
-                })
-            }).collect();
-            let results = rt.block_on(async {
-                join_all(futures).await
+                }).collect()
             });
-            let texts: Vec<Option<String>> = results.into_iter().map(|res| {
-                match res {
-                    Ok(opt) => opt,
-                    Err(_) => None, // Handle the join error if needed
-                }
-            }).collect();
+
             StringChunked::from_iter(texts)
         },
         DataType::Int32 => {
             let ca = s.i32()?;
             let rt = Runtime::new().unwrap();
-            let futures: Vec<_> = ca.into_iter().map(|opt_v| {
-                let client = client.clone();
-                let endpoint = endpoint.clone();
-                let name = name.clone();
-                let opt_v_owned = opt_v.map(|v| v.to_string()); // Convert opt_v to an owned String
-                tokio::spawn(async move {
-                    match opt_v_owned {
-                        Some(v) => {
-                            let name_owned = name.clone();
-                            let mut params = HashMap::new();
-                            params.insert(name_owned.as_str(), v.as_str());
-                            handle_api_response(client, &endpoint, &params).await
+            let texts: Vec<Option<String>> = rt.block_on(async {
+                let futures: Vec<_> = ca.into_iter().map(|opt_v| {
+                    let client = client.clone();
+                    let endpoint = endpoint.clone();
+                    let name = name.clone();
+                    let opt_v_owned = opt_v.map(|v| v.to_string()); // Convert opt_v to an owned String
+                    tokio::spawn(async move {
+                        match opt_v_owned {
+                            Some(v) => {
+                                let name_owned = name.clone();
+                                let mut params = HashMap::new();
+                                params.insert(name_owned.as_str(), v.as_str());
+                                handle_api_response(client, &endpoint, &params).await
+                            }
+                            None => None
                         }
-                        None => None
+                    })
+                }).collect();
+                let results = join_all(futures).await;
+                results.into_iter().map(|res| {
+                    match res {
+                        Ok(opt) => opt,
+                        Err(_) => None, // Handle the join error if needed
                     }
-                })
-            }).collect();
-            let results = rt.block_on(async {
-                join_all(futures).await
+                }).collect()
             });
-            let texts: Vec<Option<String>> = results.into_iter().map(|res| {
-                match res {
-                    Ok(opt) => opt,
-                    Err(_) => None, // Handle the join error if needed
-                }
-            }).collect();
+
             StringChunked::from_iter(texts)
         },
         DataType::Int64 => {
             let ca = s.i64()?;
             let rt = Runtime::new().unwrap();
-            let futures: Vec<_> = ca.into_iter().map(|opt_v| {
-                let client = client.clone();
-                let endpoint = endpoint.clone();
-                let name = name.clone();
-                let opt_v_owned = opt_v.map(|v| v.to_string()); // Convert opt_v to an owned String
-                tokio::spawn(async move {
-                    match opt_v_owned {
-                        Some(v) => {
-                            let name_owned = name.clone();
-                            let mut params = HashMap::new();
-                            params.insert(name_owned.as_str(), v.as_str());
-                            handle_api_response(client, &endpoint, &params).await
+            let texts: Vec<Option<String>> = rt.block_on(async {
+                let futures: Vec<_> = ca.into_iter().map(|opt_v| {
+                    let client = client.clone();
+                    let endpoint = endpoint.clone();
+                    let name = name.clone();
+                    let opt_v_owned = opt_v.map(|v| v.to_string()); // Convert opt_v to an owned String
+                    tokio::spawn(async move {
+                        match opt_v_owned {
+                            Some(v) => {
+                                let name_owned = name.clone();
+                                let mut params = HashMap::new();
+                                params.insert(name_owned.as_str(), v.as_str());
+                                handle_api_response(client, &endpoint, &params).await
+                            }
+                            None => None
                         }
-                        None => None
+                    })
+                }).collect();
+                let results = join_all(futures).await;
+                results.into_iter().map(|res| {
+                    match res {
+                        Ok(opt) => opt,
+                        Err(_) => None, // Handle the join error if needed
                     }
-                })
-            }).collect();
-            let results = rt.block_on(async {
-                join_all(futures).await
+                }).collect()
             });
-            let texts: Vec<Option<String>> = results.into_iter().map(|res| {
-                match res {
-                    Ok(opt) => opt,
-                    Err(_) => None, // Handle the join error if needed
-                }
-            }).collect();
+
             StringChunked::from_iter(texts)
         },
         dtype => polars_bail!(InvalidOperation:format!("Data type {dtype} not \
