@@ -13,7 +13,6 @@ struct ApiCallKwargs {
     endpoint: String,
 }
 
-#[tokio::main]
 async fn handle_api_response(client: Client, endpoint: &String, params: &HashMap<&str, &str>) -> Option<String> {
     match make_request(client, endpoint, params).await {
         Ok((text, status_code)) => {
@@ -52,7 +51,7 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                             let name_owned = name.clone();
                             let mut params = HashMap::new();
                             params.insert(name_owned.as_str(), v);
-                            handle_api_response(client, &endpoint, &params)
+                            handle_api_response(client, &endpoint, &params).await
                         }
                         None => None
                     }
@@ -83,7 +82,7 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                             let v_str = v.to_string();
                             let mut params = HashMap::new();
                             params.insert(name_owned.as_str(), v_str.as_str());
-                            handle_api_response(client, &endpoint, &params)
+                            handle_api_response(client, &endpoint, &params).await
                         }
                         None => None
                     }
@@ -114,7 +113,7 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
                             let v_str = v.to_string();
                             let mut params = HashMap::new();
                             params.insert(name_owned.as_str(), v_str.as_str());
-                            handle_api_response(client, &endpoint, &params)
+                            handle_api_response(client, &endpoint, &params).await
                         }
                         None => None
                     }
