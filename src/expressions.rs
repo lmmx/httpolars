@@ -35,7 +35,7 @@ async fn handle_api_response(client: Client, endpoint: &String, params: &HashMap
 #[polars_expr(output_type=String)]
 fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
     let s = &inputs[0];
-    let name = s.name();
+    let name = s.name().to_string();
     let endpoint = &kwargs.endpoint;
     let client = Client::new();
     let response_texts = match s.dtype() {
@@ -45,11 +45,13 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
             let futures: Vec<_> = ca.into_iter().map(|opt_v| {
                 let client = client.clone();
                 let endpoint = endpoint.clone();
+                let name = name.clone();
                 tokio::spawn(async move {
                     match opt_v {
                         Some(v) => {
+                            let name_owned = name.clone();
                             let mut params = HashMap::new();
-                            params.insert(name.clone(), v);
+                            params.insert(name_owned.as_str(), v);
                             handle_api_response(client, &endpoint, &params)
                         }
                         None => None
@@ -73,12 +75,14 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
             let futures: Vec<_> = ca.into_iter().map(|opt_v| {
                 let client = client.clone();
                 let endpoint = endpoint.clone();
+                let name = name.clone();
                 tokio::spawn(async move {
                     match opt_v {
                         Some(v) => {
+                            let name_owned = name.clone();
                             let v_str = v.to_string();
                             let mut params = HashMap::new();
-                            params.insert(name.clone(), v_str.as_str());
+                            params.insert(name_owned.as_str(), v_str.as_str());
                             handle_api_response(client, &endpoint, &params)
                         }
                         None => None
@@ -102,12 +106,14 @@ fn api_call(inputs: &[Series], kwargs: ApiCallKwargs) -> PolarsResult<Series> {
             let futures: Vec<_> = ca.into_iter().map(|opt_v| {
                 let client = client.clone();
                 let endpoint = endpoint.clone();
+                let name = name.clone();
                 tokio::spawn(async move {
                     match opt_v {
                         Some(v) => {
+                            let name_owned = name.clone();
                             let v_str = v.to_string();
                             let mut params = HashMap::new();
-                            params.insert(name.clone(), v_str.as_str());
+                            params.insert(name_owned.as_str(), v_str.as_str());
                             handle_api_response(client, &endpoint, &params)
                         }
                         None => None
